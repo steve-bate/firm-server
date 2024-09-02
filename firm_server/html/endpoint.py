@@ -30,9 +30,9 @@ def html_static_endpoint(config: ServerConfig):
     async def _static_endpoint(request: Request):
         prefix = get_url_prefix(str(request.url))
         if static_dirs := tenant_static_dirs.get(prefix):
-            file_path = request.path_params["file_path"]
+            request_file_path = request.path_params["file_path"]
             for static_dir in static_dirs:
-                file_path = os.path.join(static_dir, file_path)
+                file_path = os.path.join(static_dir, request_file_path)
                 if os.path.exists(file_path):
                     mime_type, _ = mimetypes.guess_type(file_path)
                     mime_type = mime_type or "application/octet-stream"

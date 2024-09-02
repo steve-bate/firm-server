@@ -59,8 +59,25 @@ body.light-mode {
 }
 
 .firm-name {
-    font-size: 1.5rem;
+    font-size: 3rem;
     font-weight: 400;
+    margin-top: 0;
+}
+
+.firm-name .break {
+    display: inline;
+}
+
+/* On small screens, apply a line break */
+@media (max-width: 600px) {
+    .firm-name {
+        margin-top: 0.5rem;
+        text-align: center;
+        line-height: 3rem;
+    }
+    .firm-name .break {
+        display: block;
+    }
 }
 
 .dark-mode .firm-name {
@@ -103,4 +120,60 @@ footer {
 .footer-separator {
     padding-left: 1rem;
     padding-right: 1rem;
+}
+
+.repo-link img {
+    height: 1em; /* Make the SVG height equal to the font size */
+    width: auto; /* Maintain aspect ratio */
+    line-height: inherit; /* Inherit the line-height from the parent element */
+    vertical-align: text-top; /* Adjust the alignment to the text */
+    margin-top: 2px;
+    margin-left: 0.5rem;
+}
+
+.light-mode .repo-link img {
+    content: url("/static/images/github-mark/github-mark.svg");
+}
+
+.admonition {
+    width: 80%;
+    padding: 1rem;
+    /* border-left: 4px solid #9b4dca; */
+    /* Adjust color to suit the note's context */
+    background-color: #f4f4f4;
+    /* Light background to distinguish it */
+    margin-bottom: 1.5rem;
+    /* Spacing below the admonition */
+    border-radius: 4px;
+    /* Slight rounding of corners */
+}
+
+@media (max-width: 600px) {
+    .admonition {
+        width: 100%;
+    }
+}
+
+.dark-mode .admonition {
+    background-color: rgb(93, 92, 92);
+    /* Dark background to distinguish it */
+}
+
+.admonition h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.dark-mode .admonition h4 {
+    color: pink;
+
+}
+
+.light-mode .admonition h4 {
+    color: red;
+}
+
+.admonition p {
+    margin-bottom: 0;
+    font-weight: 400;
 }

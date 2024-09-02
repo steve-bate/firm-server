@@ -2,126 +2,28 @@
 
 {% block style %}
 <style>
-    .firm-name {
-        font-size: 1.5em;
-        margin-top: 0;
+@media (max-width: 600px) {
+    main section {
+        text-align: center;
     }
-
-    .admonition {
-        width: 80%;
-        padding: 1rem;
-        /* border-left: 4px solid #9b4dca; */
-        /* Adjust color to suit the note's context */
-        background-color: #f4f4f4;
-        /* Light background to distinguish it */
-        margin-bottom: 1.5rem;
-        /* Spacing below the admonition */
-        border-radius: 4px;
-        /* Slight rounding of corners */
-    }
-
-    .dark-mode .admonition {
-        background-color: rgb(93, 92, 92);
-        /* Dark background to distinguish it */
-    }
-
-    .admonition h4 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-    }
-
-    .dark-mode .admonition h4 {
-        color: pink;
-
-    }
-    .light-mode .admonition h4 {
-        color: red;
-
-    }
-    .admonition p {
-        margin-bottom: 0;
-        font-weight: 400;
-    }
+}
 </style>
 {% endblock %}
 
 {% block header %}
 <h1 class="firm-acronym">FIRM</h1>
-<div class="firm-name">Federated Information Resource Manager</div>
+<div class="firm-name">Federated Information <span class="break"></span>Resource Manager</div>
 {% endblock %}
 
 {% block main %}
 <section>
-    <h2>What is it?</h2>
-    <p>A flexible server platform for experimenting with the social web.</p>
+    <p>A flexible server platform for experimenting with the social web. A work-in-progress.</p>
     <blockquote>
         <p>It's not SoLiD, but it's FIRM.</p>
     </blockquote>
-    <div class="admonition">
-        <h4>Note!</h4>
-        <p>This is very early work-in-progress, so expect bugs and breaking changes.</p>
-    </div>
-    <h2>Features</h2>
-    <ul>
-        <li>Multi-actor</li>
-        <li>Multitenant (multiple domain names for one server)</li>
-        <li>Core library independent of specific web-framework or storage implementation.</li>
-        <li>Data vocabulary-independent</li>
-        <li>Supports multiple authentication techniques
-            <ul>
-                <li>HTTP Signatures (Cavage)</li>
-                <li>HTTP Basic Auth</li>
-                <li>Bearer Tokens</li>
-                <li>[Future] OAuth2</li>
-                <li>[Future] FEP-specified schemes, new IETF HTTP Signatures, etc.</li>
-            </ul>
-        </li>
-        <li>Flexible Storage
-            <ul>
-                <li>In-Memory</li>
-                <li>File System (JSON)</li>
-                <li>Sqlite3 (JSON)</li>
-                <li>[Future] <a href="https://github.com/uname-n/deltabase">deltabase</a></li>
-                <li>[Future] MongoDB</li>
-                <li>[Future] RDF Graph Store</li>
-                <li>[Future] Neo4J</li>
-                <li>[Future] File System + git</li>
-            </ul>
-        </li>
-        <li>Extensible WebFinger</li>
-        <li>Extensible NodeInfo</li>
-        <li>Interoperability with Mastodon WebFinger and Follow, Undo and Create activities.</li>
-    </ul>
-    <h2>Road Map (very subject to change)</h2>
-    <ul>
-        <li>Version 0.2.0
-            <ul>
-                <li>RDF Graph Storage</li>
-                <li>SPARQL endpoint</li>
-                <li>Full-Text Search on RDF data</li>
-            </ul>
-        </li>
-        <li>Version 0.3.0
-            <ul>
-                <li>JSON Schema Validation</li>
-                <li>ActivityPub Media Upload</li>
-                <li>ActivityPub C2S Proxy Endpoint</li>
-                <li>Full-Text Search on RDF data</li>
-            </ul>
-        </li>
-        <li>Version 0.4.0
-            <ul>
-                <li>SoLiD-lite support</li>
-                <li>General file management</li>
-            </ul>
-        </li>
-        <li>Long Term <ul>
-                <li>Mastodon-compatible UI API</li>
-                <li>ActivityPub C2S Extensions</li>
-                <li>Additional storage implementations</li>
-                <li>FEP prototyping</li>
-            </ul>
-        </li>
-    </ul>
 </section>
+<div class="admonition">
+    <h4>Note!</h4>
+    <p>This is very early work-in-progress, so expect bugs and breaking changes.</p>
+</div>
 {% endblock %}

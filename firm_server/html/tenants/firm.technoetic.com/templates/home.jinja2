@@ -1,5 +1,9 @@
 {% extends "layout.jinja2" %}
 
+{% block title %}
+Technoetic Social - FIRM tenant
+{% endblock %}
+
 {% block style %}
 <style>
     :root {
@@ -14,11 +18,17 @@
         background-size: cover;
         padding: 4rem 0 4rem 2rem;
     }
+
+    @media (max-width: 600px) {
+        .tenant-name {
+            text-align: center;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block header %}
-<h1>Technoetic Social</h1>
+<h1 class="tenant-name">Technoetic Social</h1>
 {% endblock %}
 
 {% block main %}

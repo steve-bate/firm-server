@@ -24,10 +24,16 @@
             <button class="dark-mode-toggle">Toggle Dark Mode</button>
         </main>
         <footer>
-            <div><a href="/">FIRM</a> Version: Server {{ get_version("firm-server") }}, Core {{ get_version("firm") }}<span class="footer-separator">•</span>
-            <a href="/login">Login</a></div>
+            <div><a href="/">FIRM</a> Version: Server {{ get_version("firm-server") }}, Core {{ get_version("firm")
+                }}<span class="footer-separator">•</span>
+                <a href="/login">Login</a>
+            </div>
             <div>Programmer: <a href="https://stevebate.net">Steve Bate</a>
-            (<a href="https://firm.stevebate.dev/actor/steve">profile</a>)
+                (<a class="repo-link" href="https://firm.stevebate.dev/actor/steve">profile</a>)
+                <a href="https://github.com/steve-bate/firm-server" class="repo-link" target="_blank"
+                    rel="noopener noreferrer">
+                    <img src="/static/images/github-mark/github-mark-white.svg" alt="GitHub Mark" />
+                </a>
             </div>
         </footer>
     </div>
