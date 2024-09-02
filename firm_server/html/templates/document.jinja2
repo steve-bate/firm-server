@@ -1,0 +1,65 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}
+FIRM {{ resource.type }}: {% if resource.name %}{{ resource.name }}{% else  %}{{ resource.id }}{% endif %}
+{% endblock %}
+
+{% block style %}
+<style>
+    header h1 {
+        margin-bottom: 0;
+    }
+
+    .dark-mode header .document-id {
+        font-size: 0.9em;
+        color: lightgreen;
+    }
+
+    .light-mode header .document-id {
+        font-size: 0.9em;
+        color: blue;
+    }
+
+    header {
+        margin-bottom: 1em;
+    }
+
+    .document-header {
+        margin-bottom: 1em;
+    }
+
+    .document-content {
+        font-size: large;
+        margin-bottom: 1em;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<h1>{{ resource.type }}{% if resource.name %}: {{ resource.name }}{% endif %}</h1>
+<div class="document-id">{{ resource.id }}</div>
+{% endblock %}
+
+{% block main %}
+<div class="document-header">
+    <div class="document-recipients">
+        {% for field in ["to", "cc", "bcc", "bto"] %}
+        {% if resource[field] %}
+        <div class="document-recipient document-{{ field }}">
+            {{ field[0]|upper}}{{field[1:] }}:
+            {% if resource.to is string %}{{ resource[field] }}{% endif %}
+            {% if resource.to is iterable %}{{ resource[field] | join(", ") }}{% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% if resource.published %}
+    <div class="document-published">
+        Published: {{ resource.published }}
+    </div>
+    {% endif %}
+</div>
+<div class="document-content">
+    {{ resource.content | safe }}
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "layout.jinja2" %}
+
+{% block header %}
+<h1>{{ resource.type }}: {{ resource.name }}</h1>
+{% endblock %}
+
+{% block main %}
+{% if resource.image %}<img class="actor-header" src="{{ resource.image.url }}" alt="header image">{% endif %}
+<div>
+{% if resource.icon %}<img class="actor-avatar" src="{{ resource.icon.url }}" alt="{{ resource.name }}">{% endif %}
+{% if resource.summary %}<p class="actor-summary">{{ resource.summary | safe }}</p>{% endif %}
+{% if resource.attachment %}
+<div class="actor-properties">
+    <h2>See Also:</h2>
+    <table>
+        {# <thead>
+            <tr>
+                <th>Property</th>
+                <th>Value</th>
+            </tr>
+        </thead> #}
+        <tbody>
+            {% for p in resource.attachment %}
+            <tr>
+                <td>{{ p.name }}</td>
+                <td>{{ p.value | safe }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<h2>
+</div>
+{% endif %}
+{% if resource.alsoKnownAs %}
+<div class="actor-aka">
+    <h2>Also Known As:</h2>
+    {% if not resource.alsoKnownAs is string %}
+    <ul>
+        {% for aka in resource.alsoKnownAs %}
+        <li>{{ aka }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <ul>
+        <li>{{ resource.alsoKnownAs }}</li>
+    </ul>
+    {% endif %}
+<h2>
+</div>
+</div>
+{% endif %}
+{% endblock %}

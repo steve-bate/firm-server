@@ -1,0 +1,106 @@
+:root {
+    --background-color-light: #ffffff;
+    --text-color-light: #333333;
+    --background-color-dark: #333333;
+    --text-color-dark: #ffffff;
+}
+
+body {
+    background-color: var(--background-color-light);
+    color: var(--text-color-light);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Default to system preference */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: var(--background-color-dark);
+        color: var(--text-color-dark);
+    }
+}
+
+/* Override system preference if user toggles */
+body.dark-mode {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-dark);
+}
+
+body.light-mode {
+    background-color: var(--background-color-light);
+    color: var(--text-color-light);
+}
+
+.dark-mode a {
+    color: lightblue;
+}
+
+.dark-mode-toggle {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.4rem;
+    cursor: pointer;
+    border: none;
+}
+
+.firm-acronym {
+    letter-spacing: 0.45rem;
+    font-size: 3em;
+    font-weight: 460;
+    margin-bottom: 0;
+}
+
+.dark-mode .firm-acronym {
+    color: lightgreen;
+}
+
+.light-mode .firm-acronym {
+    color: green;
+}
+
+.firm-name {
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.dark-mode .firm-name {
+    color: greenyellow;
+}
+
+.light-mode .firm-name {
+    color: #2bad2b;
+}
+
+main section {
+    margin-top: 2rem;;
+    margin-bottom: 4rem;
+}
+
+.actor-avatar {
+    max-width: 40px;
+    margin-right: 2rem;
+    float: left;
+    border-radius: 50%;
+}
+
+img.actor-header {
+    width: 100%;
+    max-height: 20vh;
+    overflow: hidden;
+    object-fit: cover;
+    margin-bottom: 2rem;
+}
+
+.actor-summary {
+    font-size: 20px;
+}
+
+footer {
+    border-top: 1px solid #ddd;
+    padding-top: 0.5rem;
+}
+
+.footer-separator {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}

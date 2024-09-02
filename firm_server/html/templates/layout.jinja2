@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/static/favicon/site.webmanifest">
+    <title>{% block title %}FIRM - Federated Information Resource Manager{% endblock %}</title>
+    {% block style %}{% endblock %}
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            {% block header %}{% endblock %}
+        </header>
+        <main class="container">
+            {% block main %}{% endblock %}
+            <button class="dark-mode-toggle">Toggle Dark Mode</button>
+        </main>
+        <footer>
+            <div><a href="/">FIRM</a> Version: Server {{ get_version("firm-server") }}, Core {{ get_version("firm") }}<span class="footer-separator">•</span>
+            <a href="/login">Login</a></div>
+            <div>Programmer: <a href="https://stevebate.net">Steve Bate</a>
+            (<a href="https://firm.stevebate.dev/actor/steve">profile</a>)
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/dark-mode.js"></script>
+</body>
+
+</html>

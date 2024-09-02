@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "firm-server"
+version = "0.1.0"
+description = "Starlette-based HTTP Server for the FIRM project"
+authors = ["Steve Bate <svc-github@stevebate.net>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+firm = {path = "../firm", develop = true}
+starlette = "^0.38.2"
+uvicorn = "^0.30.6"
+colorama = "^0.4.6"
+coloredlogs = "^15.0.1"
+python-dotenv = "^1.0.1"
+pyyaml = "^6.0.2"
+dacite = "^1.8.1"
+python-mimeparse = "^2.0.0"
+jinja2 = "^3.1.4"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.8.0"
+pytest = "^8.3.2"
+pytest-httpx = "^0.30.0"
+pytest-asyncio = "^0.24.0"
+types-pyyaml = "^6.0.12.20240808"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+firm = "firm_server.cli:cli"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

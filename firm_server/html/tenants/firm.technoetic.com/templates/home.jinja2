@@ -1,0 +1,28 @@
+{% extends "layout.jinja2" %}
+
+{% block style %}
+<style>
+    :root {
+        --background-color-dark: black;
+    }
+
+    header h1 {
+        color: white;
+        font-weight: 400;
+        letter-spacing: 0.1em;
+        background-image: url("/static/technoetic-bg.jpg");
+        background-size: cover;
+        padding: 4rem 0 4rem 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<h1>Technoetic Social</h1>
+{% endblock %}
+
+{% block main %}
+<section>
+    Example tenant web site. Server shared with <a href="https://firm.stevebate.dev">FIRM</a>.
+</section>
+{% endblock %}
