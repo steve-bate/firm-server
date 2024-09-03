@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "firm-server"
-version = "0.1.0"
+version = "0.1.1"
 description = "Starlette-based HTTP Server for the FIRM project"
 authors = ["Steve Bate <svc-github@stevebate.net>"]
 readme = "README.md"
@@ -30,7 +30,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-firm = "firm_server.cli:cli"
+firm = "firm_server.cli.main:cli"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -1,15 +1,13 @@
 import asyncio
 import contextlib
 import logging
-import typing
 
-import coloredlogs
 import uvicorn
 from starlette.applications import Starlette
 
-from firm_server.config import ServerConfig, load_config
+from firm_server.config import ServerConfig
 from firm_server.routes import get_routes
-from firm_server.store import get_store, initialize_store
+from firm_server.store import get_store
 
 log = logging.getLogger(__name__ if __name__ != "__main__" else "firm_server.main")
 
@@ -50,14 +48,7 @@ class FirmServer(uvicorn.Server):
         return super().handle_exit(sig, frame)
 
 
-async def async_run(config_stream: typing.IO, verbose: bool, kwargs) -> None:
-    coloredlogs.install(level=logging.DEBUG if verbose else logging.INFO)
-
-    config = load_config(config_stream)
-    logging.debug("config: %s", config)
-
-    initialize_store(config)
-
+async def async_run(config: ServerConfig, verbose: bool, kwargs) -> None:
     def app_factory_with_config() -> Starlette:
         return app_factory(config)
 
@@ -91,5 +82,5 @@ async def async_run(config_stream: typing.IO, verbose: bool, kwargs) -> None:
         logging.getLogger("uvicorn.error").setLevel(logging.CRITICAL)
 
 
-def run(config: typing.IO, verbose: bool, kwargs):
+def run(config: ServerConfig, verbose: bool, kwargs):
     asyncio.run(async_run(config, verbose, kwargs))

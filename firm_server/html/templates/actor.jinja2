@@ -1,7 +1,9 @@
 {% extends "layout.jinja2" %}
 
-{% set header_image = resource.image.url if resource.image else "https://placehold.co/1200x300?text=" + resource.preferredUsername %}
-{% set avatar_image = resource.icon.url if resource.icon else "https://placehold.co/80x80?text=" + resource.preferredUsername %}
+{% set header_image = resource.image.url if resource.image else "https://placehold.co/1200x300?text=" +
+resource.preferredUsername %}
+{% set avatar_image = resource.icon.url if resource.icon else "https://placehold.co/80x80?text=" +
+resource.preferredUsername %}
 
 {% block style %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -252,6 +254,7 @@
         <p>May 13, 2024 (TODO)</p>
     </div>
     -->
+    {% if timeline %}
     <div class="tabs">
         <div class="active">Posts</div>
         <div>Posts and replies</div>
@@ -280,5 +283,6 @@
         </div>
     </div>
     {% endfor %}
+    {% endif %}
 </section>
 {% endblock main %}
