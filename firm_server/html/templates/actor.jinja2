@@ -1,11 +1,13 @@
 {% extends "layout.jinja2" %}
 
+{% set header_image = resource.image.url if resource.image else "https://placehold.co/1200x300" %}
+{% set avatar_image = resource.icon.url if resource.icon else "https://placehold.co/80x80" %}
+
 {% block style %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 <style>
-
     header {
-        background-image: url('{{ resource.image.url }}');
+        background-image: url('{{ header_image }}');
         background-size: cover;
         background-position: center center;
         height: 200px;
@@ -24,6 +26,11 @@
         position: absolute;
         bottom: -40px;
         left: 20px;
+    }
+
+    .profile-info .address {
+        padding-left: 2rem;
+        font-size: 1.5rem;
     }
 
     .profile-info .address-type {
@@ -103,6 +110,7 @@
         display: flex;
         justify-content: space-around;
         margin-top: 1rem;
+        margin-bottom: 1rem;
         border-bottom: 1px solid #444;
     }
 
@@ -122,9 +130,10 @@
     }
 
     .post {
-        display: flex;
-        padding: 20px;
-        border-bottom: 1px solid #444;
+        /*display: flex;*/
+        /*padding: 20px;*/
+        /*border-bottom: 1px solid #444;*/
+        margin-bottom: 2rem;
     }
 
     .post img {
@@ -135,7 +144,8 @@
     }
 
     .post-content {
-        flex: 1;
+        margin-top: 1rem;
+        display: flex;
     }
 
     .post-content p {
@@ -158,7 +168,7 @@
     .post-actions {
         display: flex;
         justify-content: space-around;
-        margin-top: 1.5rem;
+        margin-top: 2rem;
     }
 
     .post-actions i {
@@ -169,11 +179,27 @@
     .profile-summary {
         margin-top: 1rem;
     }
+
+    .profile-properties {
+        margin-left: 4rem;
+        width: 80%;
+    }
+
+    @media (max-width: 600px) {
+        .profile-info .address {
+            padding-left: 0;
+        }
+
+        .profile-properties {
+            margin: 0;
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block header %}
-<img src="{{ resource.icon.url }}" alt="Profile header" class="profile-avatar">
+<img src="{{ avatar_image }}" alt="Profile header" class="profile-avatar">
 <button class="edit-profile-btn">Edit profile</button>
 {% endblock %}
 
@@ -181,9 +207,12 @@
 <section>
     <div class="profile-info">
         <h1>{{ resource.name }}</h1>
-        <p><span class="address-type">Mastodon:</span> @{{ resource.preferredUsername }}@{{ request.url.hostname }}</p>
-        <p><span class="address-type">ActivityPub:</span> {{ resource.id }}</p>
+        <p class="address"><span class="address-type">Mastodon:</span>
+            @{{ resource.preferredUsername }}@{{ request.url.hostname }}</p>
+        <p class="address"><span class="address-type">ActivityPub:</span> {{ resource.id }}</p>
+        {% if "server/admin" in roles or "tenant/admin" in roles %}
         <div class="admin-badge"><i class="fas fa-user-shield"></i> Admin {{ request.url.hostname }}</div>
+        {% endif %}
         <div class="profile-summary">{{ resource.summary | safe }}</div>
         {% if resource.alsoKnownAs %}
         <div class="actor-aka">
@@ -199,10 +228,24 @@
                 <li>{{ resource.alsoKnownAs }}</li>
             </ul>
             {% endif %}
-        <h2>
+            <h2>
         </div>
         {% endif %}
+        {% if resource.attachment %}
+        <h2>See Also:</h2>
+        <table class="profile-properties">
+            <tbody>
+                {% for p in resource.attachment %}
+                <tr>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.value | safe }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
     </div>
+
     <!--
     <div class="profile-details">
         <p>JOINED</p>
@@ -214,19 +257,28 @@
         <div>Posts and replies</div>
         <div>Media</div>
     </div>
+    {% for post in timeline %}
     <div class="post">
-        <img src="{{ resource.icon.url }}" alt="Avatar">
         <div class="post-content">
-            <p><span class="username">tester</span> <span class="handle">@tester</span></p>
-            <p>@steve What's up dude?</p>
-            <div class="post-actions">
-                <i class="far fa-comment"></i>
-                <i class="fas fa-retweet"></i>
-                <i class="far fa-heart"></i>
-                <i class="far fa-bookmark"></i>
-                <span class="time">5d</span>
+            <img src="{{ avatar_image }}" alt="Avatar">
+            <div>
+                <p>
+                    <span class="username">{{ resource.name or resource.preferredUsername }}</span>
+                    <span class="handle">@{{ resource.preferredUsername }}</span>
+                </p>
+                {# TODO sanitize content #}
+                <p>{{ post.content | safe }}</p>
             </div>
+
+        </div>
+        <div class="post-actions">
+            <i class="far fa-comment"></i>
+            <i class="fas fa-retweet"></i>
+            <i class="far fa-heart"></i>
+            <i class="far fa-bookmark"></i>
+            <span class="time">5d</span>
         </div>
     </div>
+    {% endfor %}
 </section>
 {% endblock main %}

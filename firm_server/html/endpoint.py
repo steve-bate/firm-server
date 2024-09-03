@@ -1,9 +1,17 @@
 import logging
 import mimetypes
 import os
+from dataclasses import dataclass
+from typing import Any, Awaitable, Callable
 from urllib.parse import urlparse
 
-from firm.interfaces import HttpRequest, HttpResponse, get_url_prefix
+from firm.interfaces import (
+    FIRM_NS,
+    HttpRequest,
+    HttpResponse,
+    ResourceStore,
+    get_url_prefix,
+)
 from firm.util import get_version
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
@@ -42,10 +50,59 @@ def html_static_endpoint(config: ServerConfig):
     return _static_endpoint
 
 
-ACTOR_TEMPLATE = "actor.jinja2"
+# TODO extend the document list
+# TODO Move to core utils?
+DOCUMENT_TYPES = ["Note", "Article", "Document"]
+
+
+async def _create_timeline(uris: list[str], store: ResourceStore):
+    observed_resources = set()
+    timeline = []
+    for uri in uris:
+        activity = await store.get(uri)
+        obj = activity.get("object")
+        if isinstance(obj, str):
+            obj = await store.get(obj)
+        if (
+            obj
+            and obj["id"] not in observed_resources
+            and obj.get("type") in DOCUMENT_TYPES
+        ):
+            if activity.get("type") in ["Create", "Update"]:
+                timeline.append(obj)
+                observed_resources.add(obj["id"])
+                if len(timeline) >= 10:
+                    break
+    return timeline
+
+
+async def _actor_context(uri: str, store: ResourceStore):
+    context = {}
+    credentials = await store.query_one(
+        {
+            "@prefix": "urn:",
+            "type": FIRM_NS.Credentials.value,
+            "attributedTo": uri,
+        }
+    )
+    context["roles"] = credentials.get(FIRM_NS.role.value) if credentials else []
+    actor = await store.get(uri)
+    outbox = await store.get(actor["outbox"])
+    timeline = await _create_timeline(outbox.get("orderedItems", []), store)
+    context["timeline"] = timeline
+    return context
+
+
+@dataclass
+class TemplateConfig:
+    template: str
+    context: Callable[[str, ResourceStore], Awaitable[dict[str, Any]]] | None = None
+
+
+ACTOR_TEMPLATE = TemplateConfig("actor.jinja2", _actor_context)
 DOCUMENT_TEMPLATE = "document.jinja2"
 
-RESOURCE_TEMPLATES = {
+RESOURCE_TEMPLATES: dict[str, TemplateConfig | str] = {
     "Person": ACTOR_TEMPLATE,
     "Organization": ACTOR_TEMPLATE,
     "Group": ACTOR_TEMPLATE,
@@ -105,15 +162,19 @@ def html_endpoint(config: ServerConfig):
             if not resource:
                 return Response("Resource not found", status_code=404)
             else:
-                if template := RESOURCE_TEMPLATES.get(resource.get("type")):
-                    return templates.TemplateResponse(
-                        template,
-                        dict(
-                            request=request,
-                            get_version=get_version,
-                            resource=resource,
-                        ),
+                if template_config := RESOURCE_TEMPLATES.get(resource.get("type")):
+                    if isinstance(template_config, str):
+                        template_config = TemplateConfig(template_config)
+                    context = dict(
+                        request=request,
+                        get_version=get_version,
+                        resource=resource,
                     )
+                    if template_config.context:
+                        context.update(
+                            await template_config.context(str(request.url), store)
+                        )
+                    return templates.TemplateResponse(template_config.template, context)
                 return JSONResponse(resource)
 
     return _endpoint
