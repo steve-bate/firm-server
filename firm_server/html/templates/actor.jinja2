@@ -1,52 +1,232 @@
 {% extends "layout.jinja2" %}
 
+{% block style %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+
+    header {
+        background-image: url('{{ resource.image.url }}');
+        background-size: cover;
+        background-position: center center;
+        height: 200px;
+        position: relative;
+    }
+
+    .profile-info .address-type {
+        font-weight: bold;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        border: 2px solid #1a1a1a;
+        position: absolute;
+        bottom: -40px;
+        left: 20px;
+    }
+
+    .profile-info .address-type {
+        font-weight: bold;
+    }
+
+    .profile-info {
+        padding: 40px 20px 20px 0px;
+    }
+
+    .profile-info h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .profile-info h2 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .profile-info ul {
+        margin: 0;
+        margin-left: 2rem;
+    }
+
+    .profile-info li {
+        margin: 0;
+    }
+
+    .profile-info p {
+        margin: 5px 0;
+
+    }
+
+    .profile-info .admin-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border: 1px solid #6a5acd;
+        border-radius: 4px;
+        color: #6a5acd;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .dark-mode .admin-badge {
+        border: 1px solid lightgreen;
+        color: lightgreen;
+    }
+
+    .edit-profile-btn {
+        background-color: #6a5acd;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+
+    .profile-details {
+        background-color: #2a2a2a;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 8px;
+    }
+
+    .profile-details p {
+        margin: 0;
+        color: #b0b0b0;
+    }
+
+    .tabs {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1rem;
+        border-bottom: 1px solid #444;
+    }
+
+    .tabs div {
+
+        cursor: pointer;
+    }
+
+    .tabs .active {
+        border-bottom: 2px solid #6a5acd;
+        color: #6a5acd;
+    }
+
+    .dark-mode .tabs .active {
+        border-bottom: 2px solid lightgreen;
+        color: lightgreen;
+    }
+
+    .post {
+        display: flex;
+        padding: 20px;
+        border-bottom: 1px solid #444;
+    }
+
+    .post img {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        margin-right: 10px;
+    }
+
+    .post-content {
+        flex: 1;
+    }
+
+    .post-content p {
+        margin: 0;
+    }
+
+    .post-content .username {
+        font-weight: bold;
+    }
+
+    .post-content .handle {
+        color: #b0b0b0;
+    }
+
+    .post-content .time {
+        color: #b0b0b0;
+        font-size: 12px;
+    }
+
+    .post-actions {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1.5rem;
+    }
+
+    .post-actions i {
+        color: #b0b0b0;
+        cursor: pointer;
+    }
+
+    .profile-summary {
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
 {% block header %}
-<h1>{{ resource.type }}: {{ resource.name }}</h1>
+<img src="{{ resource.icon.url }}" alt="Profile header" class="profile-avatar">
+<button class="edit-profile-btn">Edit profile</button>
 {% endblock %}
 
 {% block main %}
-{% if resource.image %}<img class="actor-header" src="{{ resource.image.url }}" alt="header image">{% endif %}
-<div>
-{% if resource.icon %}<img class="actor-avatar" src="{{ resource.icon.url }}" alt="{{ resource.name }}">{% endif %}
-{% if resource.summary %}<p class="actor-summary">{{ resource.summary | safe }}</p>{% endif %}
-{% if resource.attachment %}
-<div class="actor-properties">
-    <h2>See Also:</h2>
-    <table>
-        {# <thead>
-            <tr>
-                <th>Property</th>
-                <th>Value</th>
-            </tr>
-        </thead> #}
-        <tbody>
-            {% for p in resource.attachment %}
-            <tr>
-                <td>{{ p.name }}</td>
-                <td>{{ p.value | safe }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-<h2>
-</div>
-{% endif %}
-{% if resource.alsoKnownAs %}
-<div class="actor-aka">
-    <h2>Also Known As:</h2>
-    {% if not resource.alsoKnownAs is string %}
-    <ul>
-        {% for aka in resource.alsoKnownAs %}
-        <li>{{ aka }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <ul>
-        <li>{{ resource.alsoKnownAs }}</li>
-    </ul>
-    {% endif %}
-<h2>
-</div>
-</div>
-{% endif %}
-{% endblock %}
+<section>
+    <div class="profile-info">
+        <h1>{{ resource.name }}</h1>
+        <p><span class="address-type">Mastodon:</span> @{{ resource.preferredUsername }}@{{ request.url.hostname }}</p>
+        <p><span class="address-type">ActivityPub:</span> {{ resource.id }}</p>
+        <div class="admin-badge"><i class="fas fa-user-shield"></i> Admin {{ request.url.hostname }}</div>
+        <div class="profile-summary">{{ resource.summary | safe }}</div>
+        {% if resource.alsoKnownAs %}
+        <div class="actor-aka">
+            <h2>Also Known As:</h2>
+            {% if not resource.alsoKnownAs is string %}
+            <ul>
+                {% for aka in resource.alsoKnownAs %}
+                <li>{{ aka }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <ul>
+                <li>{{ resource.alsoKnownAs }}</li>
+            </ul>
+            {% endif %}
+        <h2>
+        </div>
+        {% endif %}
+    </div>
+    <!--
+    <div class="profile-details">
+        <p>JOINED</p>
+        <p>May 13, 2024 (TODO)</p>
+    </div>
+    -->
+    <div class="tabs">
+        <div class="active">Posts</div>
+        <div>Posts and replies</div>
+        <div>Media</div>
+    </div>
+    <div class="post">
+        <img src="{{ resource.icon.url }}" alt="Avatar">
+        <div class="post-content">
+            <p><span class="username">tester</span> <span class="handle">@tester</span></p>
+            <p>@steve What's up dude?</p>
+            <div class="post-actions">
+                <i class="far fa-comment"></i>
+                <i class="fas fa-retweet"></i>
+                <i class="far fa-heart"></i>
+                <i class="far fa-bookmark"></i>
+                <span class="time">5d</span>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main %}
