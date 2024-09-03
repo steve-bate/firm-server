@@ -179,7 +179,7 @@ class FirmDeliveryService:
             await self._post(inbox, message=message, auth=auth)
 
 
-class AcceptedTypeRoute(Route):
+class MimeTypeRoute(Route):
     def __init__(self, *args, **kwargs):
         self._mimetypes = kwargs.pop("mimetypes", None)
         super().__init__(*args, **kwargs)
@@ -189,12 +189,17 @@ class AcceptedTypeRoute(Route):
         for key, value in scope["headers"]:
             if key == name:
                 return value.decode()
-        return None
+        return ""
 
     def _matches_mimetype(self, scope: Scope) -> bool:
-        return self._mimetypes is None or mimeparse.best_match(
-            self._mimetypes, self._get_header(scope, b"accept")
-        )
+        if accepted_types := self._get_header(scope, b"accept"):
+            return self._mimetypes is None or mimeparse.best_match(
+                self._mimetypes, accepted_types
+            )
+        elif content_type := self._get_header(scope, b"content-type"):
+            return self._mimetypes is None or content_type in self._mimetypes
+        else:
+            raise HTTPException(400, "No accept or content-type header")
 
     def matches(self, scope: Scope) -> tuple[Match, Scope]:
         return (
@@ -215,7 +220,7 @@ def get_routes(config: ServerConfig):
             for prefix in config.tenants
         ]
     )
-    activitypub_route = AcceptedTypeRoute(
+    activitypub_route = MimeTypeRoute(
         "/{path:path}",
         endpoint=_adapt_endpoint(activitypub_service.process_request),
         mimetypes=[
@@ -243,7 +248,7 @@ def get_routes(config: ServerConfig):
         Route("/.well-known/nodeinfo", endpoint=_adapt_endpoint(nodeinfo_index)),
         Route("/nodeinfo/{version}", endpoint=_adapt_endpoint(nodeinfo_version)),
         Route("/static/{file_path:path}", endpoint=html_static_endpoint(config)),
-        AcceptedTypeRoute(
+        MimeTypeRoute(
             "/{path:path}",
             endpoint=html_endpoint(config),
             mimetypes=["text/html"],

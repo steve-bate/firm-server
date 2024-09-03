@@ -201,9 +201,9 @@ async def actor_update(
     if description:
         actor_resource["summary"] = description
     if header_image:
-        actor_resource["image"] = header_image
+        actor_resource["image"] = {"type": "Image", "url": header_image}
     if avatar:
-        actor_resource["icon"] = avatar
+        actor_resource["icon"] = {"type": "Image", "url": avatar}
     if hashtags:
         tenant_prefix = get_url_prefix(uri)
         actor_resource["tag"] = [
