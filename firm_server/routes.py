@@ -35,7 +35,6 @@ from firm_server.adapters import (
 )
 from firm_server.config import ServerConfig
 from firm_server.html.endpoint import html_endpoint, html_static_endpoint
-from firm_server.store import get_store
 
 log = logging.getLogger(__name__)
 
@@ -51,16 +50,14 @@ def _adapt_response(r: HttpResponse) -> Response:
 
 def _adapt_endpoint(
     method: Callable[[HttpRequest], Awaitable[HttpResponse]],
+    store: ResourceStore,
     authenticated=False,
-    store: ResourceStore | None = None,
 ) -> Response:
     async def wrapper(request: Request):
         try:
             if authenticated and not request.user.is_authenticated:
                 raise HTTPException(401)
-            return _adapt_response(
-                await method(HttpConnectionAdapter(request, store or get_store()))
-            )
+            return _adapt_response(await method(HttpConnectionAdapter(request, store)))
         except HttpException as e:
             raise HTTPException(e.status_code, detail=e.detail, headers=e.headers)
 
@@ -131,7 +128,7 @@ class FirmDeliveryService:
                 inbox,
                 json=message,
                 headers={"Content-Type": "application/activity+json"},
-                auth=HttpxAuthAdapter(auth, get_store()),
+                auth=HttpxAuthAdapter(auth, self._store),
             )
             log.info(
                 f"FirmDeliveryService POST {inbox} "
@@ -209,20 +206,20 @@ class MimeTypeRoute(Route):
         )
 
 
-def get_routes(config: ServerConfig):
+def get_routes(store: ResourceStore, config: ServerConfig):
     activitypub_service = ActivityPubService(
         [
             ActivityPubTenant(
                 prefix,
-                get_store(),
-                FirmDeliveryService(get_store()),
+                store,
+                FirmDeliveryService(store),
             )
             for prefix in config.tenants
         ]
     )
     activitypub_route = MimeTypeRoute(
         "/{path:path}",
-        endpoint=_adapt_endpoint(activitypub_service.process_request),
+        endpoint=_adapt_endpoint(activitypub_service.process_request, store),
         mimetypes=[
             "application/activity+json",
             'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
@@ -238,15 +235,15 @@ def get_routes(config: ServerConfig):
                             HttpSigAuthenticator(),
                         ]
                     ),
-                    get_store(),
+                    store,
                 ),
             )
         ],
     )
     return [
-        Route("/.well-known/webfinger", endpoint=_adapt_endpoint(webfinger)),
-        Route("/.well-known/nodeinfo", endpoint=_adapt_endpoint(nodeinfo_index)),
-        Route("/nodeinfo/{version}", endpoint=_adapt_endpoint(nodeinfo_version)),
+        Route("/.well-known/webfinger", endpoint=_adapt_endpoint(webfinger, store)),
+        Route("/.well-known/nodeinfo", endpoint=_adapt_endpoint(nodeinfo_index, store)),
+        Route("/nodeinfo/{version}", endpoint=_adapt_endpoint(nodeinfo_version, store)),
         Route("/static/{file_path:path}", endpoint=html_static_endpoint(config)),
         MimeTypeRoute(
             "/{path:path}",

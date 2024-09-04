@@ -16,9 +16,20 @@ class FileStoreConfig:
 
 
 @dataclass
+class RdfStoreConfig:
+    path: str
+
+
+@dataclass
+class StoreDriverConfigs:
+    rdf: RdfStoreConfig | None = None
+    filesystem: FileStoreConfig | None = None
+
+
+@dataclass
 class ServerConfig:
     tenants: list[str]
-    store: FileStoreConfig
+    store: StoreDriverConfigs
 
 
 def load_config(config_in: typing.IO | str) -> ServerConfig:

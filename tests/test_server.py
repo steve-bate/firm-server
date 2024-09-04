@@ -5,24 +5,24 @@ from firm.store.memory import MemoryResourceStore
 from pytest_httpx import HTTPXMock
 from starlette.testclient import TestClient
 
-from firm_server import store as resource_store
 from firm_server.adapters import HttpxTransport
-from firm_server.config import FileStoreConfig, ServerConfig
+from firm_server.config import FileStoreConfig, ServerConfig, StoreDriverConfigs
 from firm_server.server import app_factory
 
 
 @pytest.fixture(autouse=True)
 def store() -> ResourceStore:
-    # Simulate initialize_store
-    resource_store._STORE = MemoryResourceStore()
-    return resource_store._STORE
+    return MemoryResourceStore()
 
 
 @pytest.fixture
-def client():
+def client(store):
     prefix = "https://firm.stevebate.dev"
     with TestClient(
-        app_factory(ServerConfig([prefix], FileStoreConfig("data"))),
+        app_factory(
+            ServerConfig([prefix], StoreDriverConfigs(None, FileStoreConfig("data"))),
+            store,
+        ),
         base_url=prefix,
     ) as client:
         yield client

@@ -4,25 +4,11 @@ import ssl
 
 import click
 import uvicorn
-from colorama import Fore, Style
 
 from firm_server.exceptions import ServerException
 from firm_server.server import run
 
 from . import Context, LiteralChoice, cli
-
-
-def print_banner() -> None:
-    banner = """\
- _____ ___ ____  __  __
-|  ___|_ _|  _ \|  \/  |
-| |_   | || |_) | |\/| |
-|  _|  | ||  _ <| |  | |
-|_|   |___|_| \_\_|  |_|
-"""
-    print(Fore.LIGHTGREEN_EX + banner + Style.RESET_ALL)
-    # for line in banner.splitlines():
-    #     log.info(line)
 
 
 @cli.command
@@ -109,12 +95,10 @@ def print_banner() -> None:
 def serve(ctx: Context, verbose: bool, no_banner: bool, **kwargs):
     """Run the server"""
     try:
-        if not no_banner:
-            print_banner()
         if verbose:
             logging.root.setLevel(logging.DEBUG)
             logging.debug("DEBUG")
-        run(ctx.config, verbose, kwargs)
+        run(ctx.store, ctx.config, verbose, kwargs)
     except (asyncio.exceptions.CancelledError, KeyboardInterrupt):
         pass
     except ServerException as ex:

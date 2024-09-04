@@ -3,18 +3,18 @@ import contextlib
 import logging
 
 import uvicorn
+from firm.interfaces import ResourceStore
 from starlette.applications import Starlette
 
 from firm_server.config import ServerConfig
 from firm_server.routes import get_routes
-from firm_server.store import get_store
 
 log = logging.getLogger(__name__ if __name__ != "__main__" else "firm_server.main")
 
 _app = None
 
 
-def app_factory(config: ServerConfig) -> Starlette:
+def app_factory(config: ServerConfig, store: ResourceStore) -> Starlette:
     global _app
     if _app is None:
 
@@ -24,13 +24,13 @@ def app_factory(config: ServerConfig) -> Starlette:
 
             # context = await context_factory(config())
             # app.state.context = context
-            app.state.store = get_store()
+            app.state.store = store
 
             yield
 
             log.info("ASGI lifespan: stopping")
 
-        _app = Starlette(routes=get_routes(config), lifespan=lifespan)
+        _app = Starlette(routes=get_routes(store, config), lifespan=lifespan)
     return _app
 
 
@@ -48,15 +48,17 @@ class FirmServer(uvicorn.Server):
         return super().handle_exit(sig, frame)
 
 
-async def async_run(config: ServerConfig, verbose: bool, kwargs) -> None:
-    def app_factory_with_config() -> Starlette:
-        return app_factory(config)
+async def async_run(
+    store: ResourceStore, config: ServerConfig, verbose: bool, kwargs
+) -> None:
+    def app_factory_with_context() -> Starlette:
+        return app_factory(config, store)
 
     try:
         logging.getLogger("uvicorn.error").name = "uvicorn"
         server = FirmServer(
             config=uvicorn.Config(
-                app_factory_with_config,
+                app_factory_with_context,
                 factory=True,
                 log_config=None,
                 forwarded_allow_ips="*",
@@ -82,5 +84,5 @@ async def async_run(config: ServerConfig, verbose: bool, kwargs) -> None:
         logging.getLogger("uvicorn.error").setLevel(logging.CRITICAL)
 
 
-def run(config: ServerConfig, verbose: bool, kwargs):
-    asyncio.run(async_run(config, verbose, kwargs))
+def run(store: ResourceStore, config: ServerConfig, verbose: bool, kwargs):
+    asyncio.run(async_run(store, config, verbose, kwargs))
