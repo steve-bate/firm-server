@@ -23,13 +23,18 @@ class Context:
 
 
 @click.group(context_settings=dict(auto_envvar_prefix="FIRM"))
-@click.option("--config", type=click.File("r"), envvar="FIRM_CONFIG")
+@click.option(
+    "--config",
+    type=click.File("r"),
+    envvar="FIRM_CONFIG",
+)
 @click.option(
     "--storage",
     "storage_key",
     type=click.Choice(STORE_DRIVERS),
     default="filesystem",
     show_default=True,
+    envvar="FIRM_STORAGE",
 )
 @click.pass_context
 def cli(ctx: click.Context, config: click.File, storage_key: str):

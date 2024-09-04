@@ -19,6 +19,9 @@ from firm.interfaces import (
 from firm.services.activitypub import ActivityPubService, ActivityPubTenant
 from firm.services.nodeinfo import nodeinfo_index, nodeinfo_version
 from firm.services.webfinger import webfinger
+from firm_ld.search import IndexedResource, SearchEngine
+from firm_ld.sparql import create_sparql_endpoint
+from firm_ld.store import RdfResourceStore
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -26,7 +29,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.responses import PlainTextResponse as StarlettePlainTextResponse
 from starlette.responses import Response
-from starlette.routing import Match, Route, Scope
+from starlette.routing import Match, Mount, Route, Scope
 
 from firm_server.adapters import (
     AuthenticationBackendAdapter,
@@ -206,6 +209,48 @@ class MimeTypeRoute(Route):
         )
 
 
+def _rdf_search(store: RdfResourceStore) -> HttpResponse:
+    # TODO support named graphs for search
+    search_engine = SearchEngine(store.graph)
+    search_engine.add_index(
+        IndexedResource(
+            "https://www.w3.org/ns/activitystreams#Note",
+            [
+                "https://www.w3.org/ns/activitystreams#content",
+                "https://www.w3.org/ns/activitystreams#summary",
+            ],
+            [
+                "https://www.w3.org/ns/activitystreams#content",
+                "https://www.w3.org/ns/activitystreams#summary",
+            ],
+        )
+    )
+    search_engine.add_index(
+        IndexedResource(
+            "https://www.w3.org/ns/activitystreams#Person",
+            [
+                "https://www.w3.org/ns/activitystreams#summary",
+            ],
+            [
+                "https://www.w3.org/ns/activitystreams#summary",
+                "https://www.w3.org/ns/activitystreams#name",
+                "https://www.w3.org/ns/activitystreams#preferredUsername",
+            ],
+        )
+    )
+    log.info("Indexing RDF store")
+    search_engine.update_index()
+
+    def _search(request: HttpRequest) -> HttpResponse:
+        # TODO Need to expose query params on HttpRequest
+        return JSONResponse(
+            search_engine.search(request.query_params["q"]),
+            headers={"Access-Control-Allow-Origin", "*"},
+        )
+
+    return _search
+
+
 def get_routes(store: ResourceStore, config: ServerConfig):
     activitypub_service = ActivityPubService(
         [
@@ -240,7 +285,7 @@ def get_routes(store: ResourceStore, config: ServerConfig):
             )
         ],
     )
-    return [
+    routes = [
         Route("/.well-known/webfinger", endpoint=_adapt_endpoint(webfinger, store)),
         Route("/.well-known/nodeinfo", endpoint=_adapt_endpoint(nodeinfo_index, store)),
         Route("/nodeinfo/{version}", endpoint=_adapt_endpoint(nodeinfo_version, store)),
@@ -252,3 +297,24 @@ def get_routes(store: ResourceStore, config: ServerConfig):
         ),
         activitypub_route,
     ]
+    if isinstance(store, RdfResourceStore):
+        log.info("Registering SPARQL endpoint")
+        example_query = """\
+PREFIX as: <https://www.w3.org/ns/activitystreams#>
+PREFIX firm: <https://firm.stevebate.dev#>
+
+SELECT ?object WHERE {
+    ?object is as:Note
+}
+""".rstrip()
+        # TODO tenant-specific config for sparql endpoints
+        # The namespace will always be firm.stevebate.dev
+        sparql_app = create_sparql_endpoint(
+            "https://firm.stevebate.dev/sparql/",
+            example_query=example_query,
+            favicon="https://firm.stevebate.dev/static/favicon/favicon.ico",
+        )
+        routes.insert(4, Mount("/sparql", app=sparql_app, name="sparql"))
+        # Add a search engine
+        routes.insert(4, Route("/search", endpoint=_rdf_search(store)))
+    return routes
