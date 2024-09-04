@@ -133,11 +133,12 @@ async def actor_create(
             "totalItems": 0,
         },
         {
+            "@context": "https://www.w3.org/ns/activitystreams",
             "id": f"urn:uuid:{uuid.uuid4()}",
             "attributedTo": uri,
             "type": [FIRM_NS.Credentials.value],
             FIRM_NS.privateKey.value: key_pair.private,
-            FIRM_NS.role.value: roles,
+            FIRM_NS.role.value: roles or None,
         },
     ]
     for r in resources:

@@ -6,6 +6,7 @@ import coloredlogs
 import dotenv
 from firm.interfaces import ResourceStore
 
+import firm_server.store as server_store
 from firm_server.config import ServerConfig, load_config
 from firm_server.store import initialize_store
 
@@ -32,6 +33,13 @@ def cli(ctx: click.Context, config: click.File):
     store = initialize_store(config_data)
     ctx.obj = Context(store, config_data)
     coloredlogs.install()
+
+
+@cli.result_callback()
+def after_command(result, **kwargs):
+    if hasattr(server_store._STORE, "close"):
+        log.info("resource store closed")
+        server_store._STORE.close()
 
 
 class LiteralChoice(click.ParamType):
