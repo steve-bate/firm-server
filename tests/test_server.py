@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from firm.auth.http_signature import HttpSignatureAuth
 from firm.interfaces import ResourceStore
@@ -99,14 +101,24 @@ cF38UF2egml5YnqtcLl3/ukCAwEAAQ==
 """
 
 
-async def test_dereference_noauth(client, store):
-    await store.put({"id": "https://firm.stevebate.dev/actor/steve"})
-    response = client.get(
-        "https://firm.stevebate.dev/actor/steve",
-    )
-    assert response.is_success
-    data = response.json()
-    assert data["id"] == "https://firm.stevebate.dev/actor/steve"
+class FirmServerTestBase:
+    async def test_dereference_noauth(self, client, store):
+        await store.put({"id": "https://firm.stevebate.dev/actor/steve"})
+        response = client.get(
+            "https://firm.stevebate.dev/actor/steve",
+        )
+        assert response.is_success
+        data = response.json()
+        assert data["id"] == "https://firm.stevebate.dev/actor/steve"
+
+
+class TestServer(FirmServerTestBase):
+    ...
+
+
+@pytest.mark.skip_unless("FIRM_LIVE_TEST" in os.environ, reason="Not a live test")
+class TestLiveServer(FirmServerTestBase):
+    ...
 
 
 # TODO Not sure if this is doing anything since GET is not protected

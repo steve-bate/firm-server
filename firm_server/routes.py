@@ -3,11 +3,13 @@ from typing import Awaitable, Callable, Iterable
 
 import httpx
 import mimeparse
+from firm.auth.authorization import CoreAuthorizationService
 from firm.auth.bearer_token import BearerTokenAuthenticator
 from firm.auth.chained import AuthenticatorChain
 from firm.auth.http_signature import HttpSigAuthenticator, HttpSignatureAuth
 from firm.interfaces import (
     FIRM_NS,
+    DeliveryService,
     HttpException,
     HttpRequest,
     HttpResponse,
@@ -15,13 +17,17 @@ from firm.interfaces import (
     JsonResponse,
     PlainTextResponse,
     ResourceStore,
+    Validator,
 )
 from firm.services.activitypub import ActivityPubService, ActivityPubTenant
 from firm.services.nodeinfo import nodeinfo_index, nodeinfo_version
 from firm.services.webfinger import webfinger
+from firm.util import AP_PUBLIC_URIS, AS2_CONTENT_TYPES
+from firm_jsonschema.validation import create_validator
 from firm_ld.search import IndexedResource, SearchEngine
 from firm_ld.sparql import create_sparql_endpoint
 from firm_ld.store import RdfResourceStore
+from jsonschema.exceptions import ValidationError
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -77,18 +83,15 @@ def is_local(prefix: str, uri: str):
 
 
 def is_public(uri: str):
-    return uri in [
-        "https://www.w3.org/ns/activitystreams#Public",
-        "as:Public",
-        "Public",
-    ]
+    return uri in AP_PUBLIC_URIS
 
 
 # TODO Reconsider design of FirmDeliveryService (abstract class?)
-class FirmDeliveryService:
+class FirmDeliveryService(DeliveryService):
     _RECIPIENT_PROPS = ["to", "cc", "bto", "bcc"]
 
-    def __init__(self, store: ResourceStore):
+    def __init__(self, config: ServerConfig, store: ResourceStore):
+        self._config = config
         self._store = store
 
     async def _resolve_inboxes(self, recipient_uris: Iterable[str]) -> set[str]:
@@ -174,9 +177,18 @@ class FirmDeliveryService:
                 elif isinstance(r, list):
                     recipient_uris.update(r)
         inboxes = await self._resolve_inboxes(recipient_uris)
-        message = await self._serialize(activity)
-        for inbox in inboxes:
-            await self._post(inbox, message=message, auth=auth)
+        message = None
+        for inbox_uri in inboxes:
+            if self._config.is_local(inbox_uri):
+                inbox = await self._store.get(inbox_uri)
+                items = inbox.get("orderedItems", [])
+                items.insert(0, activity["id"])
+                inbox["orderedItems"] = items
+                await self._store.put(inbox)
+            else:
+                if message is None:
+                    message = await self._serialize(activity)
+                await self._post(inbox_uri, message=message, auth=auth)
 
 
 class MimeTypeRoute(Route):
@@ -192,14 +204,16 @@ class MimeTypeRoute(Route):
         return ""
 
     def _matches_mimetype(self, scope: Scope) -> bool:
-        if accepted_types := self._get_header(scope, b"accept"):
-            return self._mimetypes is None or mimeparse.best_match(
-                self._mimetypes, accepted_types
-            )
+        if scope["method"] in ["GET", "HEAD"]:
+            if accepted_types := self._get_header(scope, b"accept"):
+                return self._mimetypes is None or mimeparse.best_match(
+                    self._mimetypes, accepted_types
+                )
+            raise HTTPException(400, "No accept header")
         elif content_type := self._get_header(scope, b"content-type"):
             return self._mimetypes is None or content_type in self._mimetypes
         else:
-            raise HTTPException(400, "No accept or content-type header")
+            raise HTTPException(400, "No content-type header")
 
     def matches(self, scope: Scope) -> tuple[Match, Scope]:
         return (
@@ -251,13 +265,31 @@ def _rdf_search(store: RdfResourceStore) -> HttpResponse:
     return _search
 
 
+class JsonSchemaValidator(Validator):
+    def __init__(self, config: ServerConfig):
+        self._validator = create_validator(
+            root_schema=config.validation.root_schema,
+            schema_dirs=config.validation.schema_dirs,
+            package_names=["firm_server.schemas"] + config.validation.package_names,
+        )
+
+    def validate(self, obj: JSONObject) -> None:
+        try:
+            self._validator.validate(obj)
+        except ValidationError as e:
+            raise HttpException(400, e.message)
+
+
 def get_routes(store: ResourceStore, config: ServerConfig):
+    validator = JsonSchemaValidator(config)
     activitypub_service = ActivityPubService(
         [
             ActivityPubTenant(
-                prefix,
-                store,
-                FirmDeliveryService(store),
+                prefix=prefix,
+                store=store,
+                authorizer=CoreAuthorizationService(prefix, store),
+                delivery_service=FirmDeliveryService(config, store),
+                validator=validator,
             )
             for prefix in config.tenants
         ]
@@ -265,10 +297,7 @@ def get_routes(store: ResourceStore, config: ServerConfig):
     activitypub_route = MimeTypeRoute(
         "/{path:path}",
         endpoint=_adapt_endpoint(activitypub_service.process_request, store),
-        mimetypes=[
-            "application/activity+json",
-            'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
-        ],
+        mimetypes=AS2_CONTENT_TYPES,
         methods=["GET", "POST"],
         middleware=[
             Middleware(

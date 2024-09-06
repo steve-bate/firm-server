@@ -19,6 +19,7 @@ python-mimeparse = "^2.0.0"
 jinja2 = "^3.1.4"
 firm-ld = {path = "../firm-ld", develop = true}
 oxrdflib = "^0.3.7"
+firm-jsonschema = {path = "../firm-jsonschema", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.8.0"
